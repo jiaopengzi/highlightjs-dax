@@ -1,6 +1,6 @@
 {
     "name": "highlightjs-dax",
-    "version": "1.0.0-beta1",
+    "version": "1.0.0",
     "description": "DAX (Data Analysis Expressions) language definition for highlight.js with an optional theme.",
     "keywords": [
         "analysis-services",
@@ -50,7 +50,7 @@
         "@typescript/native-preview": "7.0.0-dev.20260328.1",
         "bumpp": "11.0.1",
         "highlight.js": "11.11.1",
-        "sass": "^1.99.0",
+        "sass": "1.99.0",
         "typescript": "6.0.3",
         "vite-plus": "0.1.19"
     },

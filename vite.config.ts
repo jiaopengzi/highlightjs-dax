@@ -31,6 +31,6 @@ export default defineConfig({
         useTabs: false, // 制表符使用空格
         bracketSpacing: true, // 对象大括号带空格
         arrowParens: "always", // 箭头符号参数始终带括号
-        ignorePatterns: ["node_modules/**", "dist/**"], // 忽略node_modules和dist目录
+        ignorePatterns: ["node_modules/**", "dist/**", "*.yaml", "*.yml"], // 忽略node_modules和dist目录
     },
 })

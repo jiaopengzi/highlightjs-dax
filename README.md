@@ -87,9 +87,15 @@ vp pack
 
 ### Publish from GitHub Actions
 
-Do not need to create the package manually on npm first. The package page is created automatically on the first successful publish.
+This repository uses npm Trusted Publisher with GitHub Actions OIDC. Do not configure an `NPM_TOKEN` secret for publishing.
 
-Before using the GitHub Actions workflow, configure the repository secret `NPM_TOKEN` in GitHub repository settings.
+Before using the workflow, open the `highlightjs-dax` package settings on npmjs.com and configure a Trusted Publisher that matches:
+
+- GitHub user or org: `jiaopengzi`
+- Repository: `highlightjs-dax`
+- Workflow filename: `publish.yaml`
+
+If the workflow log shows `Signed provenance statement` and then fails with `E404`, GitHub Actions authentication is already working. In that case, the issue is usually that the package's Trusted Publisher binding or publishing access on npm does not match this repository/workflow.
 
 With GitHub Actions, the Git tag must exactly match `package.json.version`, and it must not include a `v` prefix.
 

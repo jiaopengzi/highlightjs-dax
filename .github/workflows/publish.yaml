@@ -5,8 +5,8 @@
 # Description : GitHub Actions npm 发布配置文件
 
 # 使用 npm Trusted Publisher (OIDC)，无需配置 NPM_TOKEN secret。
-# 首次发布需要在本地 vp pm login 然后 vp pm publish, 如果是使用 beta `vp pm publish --tag beta`
-# 需要在 npmjs.com 包设置中为本仓库配置 Trusted Publisher。
+# 需要在 npmjs.com 的 highlightjs-dax 包设置中，将当前 GitHub 仓库与 publish.yaml 绑定为 Trusted Publisher。
+# 如果日志已经出现 Signed provenance statement，但随后是 E404，通常不是工作流认证失败，而是 npm 包的 Trusted Publisher 绑定或 publishing access 配置不匹配。
 
 name: Publish highlightjs-dax to npm
 
@@ -87,10 +87,10 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Dry-run publish
-        run: npm publish --dry-run --access public --tag ${{ steps.npm_tag.outputs.value
-          }} --ignore-scripts
+        run: vp pm publish --dry-run --access public --tag ${{
+          steps.npm_tag.outputs.value }} --no-git-checks -- --ignore-scripts
 
       - name: Publish to npm
         if: startsWith(github.ref, 'refs/tags/')
-        run: npm publish --access public --tag ${{ steps.npm_tag.outputs.value }}
-          --provenance --ignore-scripts
+        run: vp pm publish --access public --tag ${{ steps.npm_tag.outputs.value }}
+          --no-git-checks -- --provenance --ignore-scripts

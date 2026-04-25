@@ -87,11 +87,25 @@ vp pack
 
 ### Publish from GitHub Actions
 
-For example, if `package.json` contains `"version": "1.0.0"`, then use, Do not add a `v` prefix.
+Do not need to create the package manually on npm first. The package page is created automatically on the first successful publish.
+
+Before using the GitHub Actions workflow, configure the repository secret `NPM_TOKEN` in GitHub repository settings.
+
+With GitHub Actions, the Git tag must exactly match `package.json.version`, and it must not include a `v` prefix.
+
+For prerelease versions such as `1.0.0-beta1`, npm requires an explicit dist-tag.
+This repository's workflow publishes prerelease versions with the `beta` tag, and stable versions with the default `latest` tag.
+
+Examples:
 
 ```bash
+# stable release
 git tag 1.0.0
 git push origin 1.0.0
+
+# prerelease
+git tag 1.0.0-beta1
+git push origin 1.0.0-beta1
 ```
 
 ## License

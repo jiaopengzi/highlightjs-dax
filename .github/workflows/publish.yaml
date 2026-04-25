@@ -76,13 +76,25 @@ jobs:
                   test -f dist/index.d.cts
                   test -f dist/theme.css
 
+            - name: Detect npm dist-tag
+              id: npm_tag
+              shell: bash
+              run: |
+                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
+
+                  if [[ "$PACKAGE_VERSION" == *-* ]]; then
+                    echo "value=beta" >> "$GITHUB_OUTPUT"
+                  else
+                    echo "value=latest" >> "$GITHUB_OUTPUT"
+                  fi
+
             - name: Dry-run publish
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-              run: vp pm publish --dry-run --access public --no-git-checks
+              run: vp pm publish --dry-run --access public --tag ${{ steps.npm_tag.outputs.value }} --no-git-checks
 
             - name: Publish to npm
               if: startsWith(github.ref, 'refs/tags/')
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-              run: vp pm publish --access public --no-git-checks
+              run: vp pm publish --access public --tag ${{ steps.npm_tag.outputs.value }} --no-git-checks

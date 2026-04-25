@@ -80,6 +80,12 @@ jobs:
             echo "value=latest" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Setup Node.js for npm publish
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          registry-url: "https://registry.npmjs.org"
+
       - name: Dry-run publish
         run: npm publish --dry-run --access public --tag ${{ steps.npm_tag.outputs.value
           }} --ignore-scripts

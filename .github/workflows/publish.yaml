@@ -1,0 +1,88 @@
+# FilePath    : highlightjs-dax\.github\workflows\publish.yaml
+# Author      : jiaopengzi
+# Blog        : https://jiaopengzi.com
+# Copyright   : Copyright (c) 2026 by jiaopengzi, All Rights Reserved.
+# Description : GitHub Actions npm 发布配置文件
+
+# Repository secrets 需要提前在 GitHub 仓库设置中配置:
+#   NPM_TOKEN
+
+name: Publish highlightjs-dax to npm
+
+on:
+    push:
+        tags:
+            - "*"
+
+    workflow_dispatch:
+
+concurrency:
+    group: highlightjs-dax-publish
+    cancel-in-progress: false
+
+permissions:
+    contents: read
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v6
+
+            - name: Setup Vite+
+              uses: voidzero-dev/setup-vp@v1
+              with:
+                  cache: true
+                  node-version-file: ".node-version"
+
+            - name: Check code quality
+              run: vp check
+
+            - name: Run tests
+              run: vp test
+
+            - name: Build package
+              run: vp pack
+
+            - name: Configure npm registry auth
+              shell: bash
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: |
+                  cat <<EOF > "$HOME/.npmrc"
+                  registry=https://registry.npmjs.org/
+                  //registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}
+                  EOF
+
+            - name: Verify tag matches package version
+              if: startsWith(github.ref, 'refs/tags/')
+              shell: bash
+              run: |
+                  PACKAGE_VERSION=$(node -p "require('./package.json').version")
+                  TAG_NAME="${GITHUB_REF_NAME}"
+
+                  if [ "${PACKAGE_VERSION}" != "${TAG_NAME}" ]; then
+                    echo "Tag ${TAG_NAME} does not match package.json version ${PACKAGE_VERSION}."
+                    exit 1
+                  fi
+
+            - name: Verify publish artifacts
+              shell: bash
+              run: |
+                  test -f dist/index.cjs
+                  test -f dist/index.mjs
+                  test -f dist/index.d.cts
+                  test -f dist/theme.css
+
+            - name: Dry-run publish
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: vp pm publish --dry-run --access public --no-git-checks
+
+            - name: Publish to npm
+              if: startsWith(github.ref, 'refs/tags/')
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: vp pm publish --access public --no-git-checks

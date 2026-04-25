@@ -76,7 +76,7 @@ For GitHub Actions, consider using [`voidzero-dev/setup-vp`](https://github.com/
 ```yaml
 - uses: voidzero-dev/setup-vp@v1
   with:
-    cache: true
+      cache: true
 - run: vp check
 - run: vp test
 ```
@@ -85,4 +85,12 @@ For GitHub Actions, consider using [`voidzero-dev/setup-vp`](https://github.com/
 
 - [ ] Run `vp install` after pulling remote changes and before getting started.
 - [ ] Run `vp check` and `vp test` to validate changes.
-<!--VITE PLUS END-->
+  <!--VITE PLUS END-->
+
+## highlightjs-dax Package Notes
+
+- `vite.config.ts` is the source of truth for this package's build outputs.
+- `vp pack` currently emits minified ESM + CJS library files, declaration files, and then compiles `src/theme.scss` into compressed `dist/theme.css` via `pack.onSuccess`.
+- Keep `package.json` aligned with those outputs, especially `main`, `module`, `types`, `style`, and `exports`.
+- The documented public theme asset is `highlightjs-dax/theme.css`. Do not document SCSS subpath imports unless they are explicitly re-added to both build config and package exports.
+- Use `vp dev` for the local demo page, and use `vp run dev` only when you want the package watch build.

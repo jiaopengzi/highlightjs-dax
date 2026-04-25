@@ -1,41 +1,58 @@
 {
-  "name": "highlightjs-dax",
-  "version": "0.0.0",
-  "description": "A starter for creating a TypeScript package.",
-  "homepage": "https://github.com/author/library#readme",
-  "bugs": {
-    "url": "https://github.com/author/library/issues"
-  },
-  "license": "MIT",
-  "author": "Author Name <author.name@mail.com>",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/author/library.git"
-  },
-  "files": [
-    "dist"
-  ],
-  "type": "module",
-  "exports": {
-    ".": "./dist/index.mjs",
-    "./package.json": "./package.json"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "build": "vp pack",
-    "dev": "vp pack --watch",
-    "test": "vp test",
-    "check": "vp check",
-    "prepublishOnly": "vp run build"
-  },
-  "devDependencies": {
-    "@types/node": "24.12.2",
-    "@typescript/native-preview": "7.0.0-dev.20260328.1",
-    "bumpp": "11.0.1",
-    "typescript": "6.0.3",
-    "vite-plus": "0.1.19"
-  },
-  "packageManager": "pnpm@10.33.2"
+    "name": "highlightjs-dax",
+    "version": "1.0.0",
+    "description": "DAX (Data Analysis Expressions) language definition for highlight.js with an optional theme.",
+    "keywords": [
+        "analysis-services",
+        "dax",
+        "highlight.js",
+        "powerbi",
+        "syntax-highlighting"
+    ],
+    "homepage": "https://github.com/jiaopengzi/highlightjs-dax#readme",
+    "bugs": {
+        "url": "https://github.com/jiaopengzi/highlightjs-dax/issues"
+    },
+    "license": "MIT",
+    "author": "jiaopengzi <jiaopengzi@outlook.com>",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jiaopengzi/highlightjs-dax.git"
+    },
+    "style": "./dist/theme.css",
+    "files": [
+        "dist"
+    ],
+    "type": "module",
+    "main": "./dist/index.cjs",
+    "module": "./dist/index.mjs",
+    "types": "./dist/index.d.cts",
+    "exports": {
+        ".": {
+            "import": "./dist/index.mjs",
+            "require": "./dist/index.cjs"
+        },
+        "./package.json": "./package.json",
+        "./theme.css": "./dist/theme.css"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "build": "vp pack",
+        "dev": "vp pack --watch",
+        "test": "vp test",
+        "check": "vp check",
+        "prepublishOnly": "vp run build"
+    },
+    "devDependencies": {
+        "@types/node": "24.12.2",
+        "@typescript/native-preview": "7.0.0-dev.20260328.1",
+        "bumpp": "11.0.1",
+        "highlight.js": "11.11.1",
+        "sass": "^1.99.0",
+        "typescript": "6.0.3",
+        "vite-plus": "0.1.19"
+    },
+    "packageManager": "pnpm@10.33.2"
 }

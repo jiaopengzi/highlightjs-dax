@@ -24,7 +24,7 @@
         <h1>DAX highlight.js demo</h1>
         <p>Local preview for the DAX language definition and theme.</p>
 
-        <pre><code class="language-dax">
+        <pre data-lang="dax"><code class="language-dax">
 // A simple DAX measure
 Total Sales = 
 SUMX (
@@ -51,6 +51,136 @@ EVALUATE
   )
   </code></pre>
 
+        <pre data-lang="dax"><code class="language-dax">
+      0004_产品数量_安全库存 = 
+/*
+分布按照理想状态的标准正太分布，安全库存仅作为参考点，实际生产中需要加入业务的理解，进行调整。
+SS = z * SQRT ( σd ^ 2 * μL + σL ^ 2 * μd ^ 2 )
+SS：安全库存（Safe Stock）。
+z : 服务水平系数，服务水平（现货率）为 0.95，在标准正太分布下对应的 z = 1.65。
+L : 采购提前期，本案例中对应入库间隔天数。
+μL: 平均提前期。
+σL: 提前期 L 的标准差。
+d : 日出库数量。
+μd: 平均日出库数量。
+σd: 日出库量 d 的标准差。
+*/
+
+VAR N = [02_ROW 值]//默认30天
+VAR DATE_END0 =
+    LASTDATE ( '01_Calendar'[C01_Dates] )
+VAR DATE_START0 =
+    DATEADD ( DATE_END0, - N + 1, DAY ) // 注意不包含边界。
+VAR DATE_Table0 =
+    DATESBETWEEN ( '01_Calendar'[C01_Dates], DATE_START0, DATE_END0 )
+VAR T01 =
+    CALCULATETABLE ( 'T03_入库信息表', DATE_Table0 )
+VAR T02 =
+    SUMMARIZE (
+        T01,
+        '01_Calendar'[C01_Dates],
+        'T00_产品表'[F_01_产品编号],
+        'T01_门店表'[F_01_门店编号],
+        "@入库", [0001_产品数量_入库]
+    )
+VAR T03 =
+    SUMMARIZE (
+        T02,
+        [F_01_产品编号],
+        [F_01_门店编号],
+        "@μL",
+            VAR P0 = [F_01_产品编号]
+            VAR M0 = [F_01_门店编号]
+            VAR T_FILTER =
+                FILTER ( T02, [F_01_产品编号] = P0 && [F_01_门店编号] = M0 )
+            VAR DATE_MAX =
+                MAXX ( T_FILTER, [C01_Dates] )
+            VAR DATE_MIN =
+                MINX ( T_FILTER, [C01_Dates] )
+            VAR DAY_DIFF =
+                DATEDIFF ( DATE_MIN, DATE_MAX, DAY )
+            VAR T_ROWS =
+                COUNTROWS ( T_FILTER ) - 1 // 注意去除边界减 1 。
+            RETURN
+                DIVIDE ( DAY_DIFF, T_ROWS, 0 ),
+        "@σL",
+            VAR P0 = [F_01_产品编号]
+            VAR M0 = [F_01_门店编号]
+            VAR T_FILTER =
+                FILTER ( T02, [F_01_产品编号] = P0 && [F_01_门店编号] = M0 )
+            VAR T_INDEX =
+                SUBSTITUTEWITHINDEX (
+                    ADDCOLUMNS ( T_FILTER, "@date", [C01_Dates] ),
+                    "@INDEX", T_FILTER,
+                    [C01_Dates], ASC
+                )
+            VAR T_INDEX_N =
+                ADDCOLUMNS (
+                    T_INDEX,
+                    "@N",
+                        VAR INDEX0 = [@INDEX]
+                        VAR T_1 =
+                            FILTER ( T_INDEX, [@INDEX] = INDEX0 - 1 )
+                        VAR DATE_1 =
+                            MAXX ( T_1, [@date] )
+                        VAR N0 =
+                            DATEDIFF ( DATE_1, [@date], DAY )
+                        RETURN
+                            N0
+                )
+            VAR T_INDEX_N_NOT_BLANK =
+                FILTER ( T_INDEX_N, [@N] <> BLANK () )
+            RETURN
+                IFERROR ( STDEVX.S ( T_INDEX_N_NOT_BLANK, [@N] ), 0 )
+    )
+VAR T11 =
+    CALCULATETABLE (
+        'T05_订单子表',
+        DATE_Table0,
+        USERELATIONSHIP ( 'T04_订单主表'[F_04_送货日期], '01_Calendar'[C01_Dates] )
+    ) //送货日期需要激活关系。
+VAR T12 =
+    SUMMARIZE (
+        T11,
+        '01_Calendar'[C01_Dates],
+        'T00_产品表'[F_01_产品编号],
+        'T01_门店表'[F_01_门店编号],
+        "@出库", [0002_产品数量_出库]
+    )
+VAR T13 =
+    SUMMARIZE (
+        T12,
+        [F_01_产品编号],
+        [F_01_门店编号],
+        "@μd",
+            VAR P0 = [F_01_产品编号]
+            VAR M0 = [F_01_门店编号]
+            VAR T_FILTER =
+                FILTER ( T12, [F_01_产品编号] = P0 && [F_01_门店编号] = M0 )
+            VAR AVG0 =
+                AVERAGEX ( T_FILTER, [@出库] )
+            RETURN
+                AVG0,
+        "@σd",
+            VAR P0 = [F_01_产品编号]
+            VAR M0 = [F_01_门店编号]
+            VAR T_FILTER =
+                FILTER ( T12, [F_01_产品编号] = P0 && [F_01_门店编号] = M0 )
+            VAR STDE0 =
+                IFERROR ( STDEVX.S ( T_FILTER, [@出库] ), 0 )
+            RETURN
+                STDE0
+    )
+VAR T =
+    NATURALINNERJOIN ( T03, T13 )
+VAR z = [0010_产品数量_安全库存_z]
+VAR SS =
+    //SS= z * SQRT( σd ^ 2 * μL + σL ^ 2 * μd ^ 2 )
+    SUMX ( T, z * SQRT ( [@σd] ^ 2 * [@μL] + [@σL] ^ 2 * [@μd] ^ 2 )
+    )
+RETURN
+    SS      
+  </code></pre>
         <script type="module">
             import hljs from "highlight.js/lib/core"
             import dax from "./src/index.ts"
@@ -63,6 +193,9 @@ EVALUATE
             document.addEventListener("DOMContentLoaded", () => {
                 document.querySelectorAll("pre code").forEach((block) => {
                     hljs.highlightElement(block)
+                    // 将语言标识写到父 <pre> 的 data-lang，驱动主题 CSS 作用域
+                    const lang = block.className.match(/language-(\S+)/)?.[1]
+                    if (lang && block.parentElement) block.parentElement.dataset.lang = lang
                 })
             })
         </script>
